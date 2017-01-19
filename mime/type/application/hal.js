@@ -61,14 +61,12 @@ module.exports = {
       }
     }
 
-    return opts.registry.lookup(opts.mime.suffix).then(function (converter) {
-      return converter.read(str, opts)
-    }).then(function (root) {
+    function processRelations (root) {
       find.findProperties(root, '_embedded', function (embedded, resource, name) {
         Object.keys(embedded).forEach(function (relationship) {
           if (relationship in resource) { return }
           var related = responsePromise({
-            entity: embedded[relationship]
+            entity: processRelations(embedded[relationship])
           })
           defineProperty(resource, relationship, related)
         })
@@ -112,7 +110,11 @@ module.exports = {
       })
 
       return root
-    })
+    }
+
+    return opts.registry.lookup(opts.mime.suffix).then(function (converter) {
+      return converter.read(str, opts)
+    }).then(processRelations)
   },
 
   write: function (obj, opts) {

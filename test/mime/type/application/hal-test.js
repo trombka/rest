@@ -55,6 +55,15 @@
           })
         })['catch'](fail)
       },
+      'should place embedded relationships on an embedded relationship of the host object': function () {
+        return hal.read(JSON.stringify({ _embedded: { prop: { _embedded: { prop: 'embed' } } } }), { mime: halMime, registry: registry }).then(function (resource) {
+          return resource.prop.entity().then(function (outerProp) {
+            outerProp.prop.entity().then(function (prop) {
+              assert.same(prop, 'embed')
+            })
+          })
+        })['catch'](fail)
+      },
       'should not overwrite a property on the host oject with an embedded relationship': function () {
         return hal.read(JSON.stringify({ prop: 'host', _embedded: { prop: 'embed' } }), { mime: halMime, registry: registry }).then(function (resource) {
           assert.same(resource.prop, 'host')
@@ -63,6 +72,13 @@
       'should place linked relationships on the host object': function () {
         return hal.read(JSON.stringify({ _links: { prop: { href: '/' } } }), { mime: halMime, registry: registry }).then(function (resource) {
           assert.isFunction(resource.prop.entity)
+        })['catch'](fail)
+      },
+      'should place linked relationships on an embedded relationship of the host object': function () {
+        return hal.read(JSON.stringify({ _embedded: { prop: { _links: { prop: { href: '/' } } } } }), { mime: halMime, registry: registry }).then(function (resource) {
+          return resource.prop.entity().then(function (outerProp) {
+            assert.isFunction(outerProp.prop.entity)
+          })
         })['catch'](fail)
       },
       'should not overwrite a property on the host oject with a linked relationship': function () {
